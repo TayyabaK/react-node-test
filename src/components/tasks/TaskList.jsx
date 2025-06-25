@@ -26,35 +26,26 @@ import {
 } from 'react-icons/fa';
 
 const TaskList = () => {
-  // State management with proper initialization
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', description: '' });
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'complete' | 'incomplete'
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  /**
-   * Load tasks from localStorage or initialize with mock data
-   * Uses localStorage for cross-component data sharing
-   */
   useEffect(() => {
     const loadTasks = async () => {
       try {
-        // Simulate network delay for realistic UX
         await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Check for existing tasks in localStorage
         const storedTasks = localStorage.getItem('tasks');
 
         if (storedTasks) {
-          // Parse and use stored tasks
           const parsedTasks = JSON.parse(storedTasks);
           setTasks(parsedTasks);
           setFilteredTasks(parsedTasks);
         } else {
-          // Initialize with mock data if no stored tasks exist
           const mockTasks = [
             {
               _id: '1',
@@ -96,9 +87,7 @@ const TaskList = () => {
             },
           ];
 
-          // Store mock tasks in localStorage for persistence
           localStorage.setItem('tasks', JSON.stringify(mockTasks));
-
           setTasks(mockTasks);
           setFilteredTasks(mockTasks);
         }
@@ -114,23 +103,18 @@ const TaskList = () => {
 
     loadTasks();
 
-    // Set up event listener for storage changes from other components
     const handleStorageChange = (e) => {
       if (e.key === 'tasks') {
         try {
           const updatedTasks = JSON.parse(e.newValue || '[]');
           setTasks(updatedTasks);
-          setFilteredTasks(updatedTasks);
         } catch (err) {
           console.error('Error parsing tasks from storage:', err);
         }
       }
     };
 
-    // Add event listener for storage changes
     window.addEventListener('storage', handleStorageChange);
-
-    // Clean up event listener on component unmount
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
@@ -138,18 +122,16 @@ const TaskList = () => {
 
   useEffect(() => {
     const filtered = tasks.filter((task) => {
-      if (filterStatus === 'all') return true;
-      return task.status === filterStatus;
+      const matchesStatus =
+        filterStatus === 'all' || task.status === filterStatus;
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
     });
     setFilteredTasks(filtered);
-  }, [tasks, filterStatus]);
+  }, [tasks, filterStatus, searchQuery]);
 
-  /**
-   * Toggle task completion status
-   * Updates both component state and localStorage
-   *
-   * @param {string} taskId - ID of the task to update
-   */
   const handleStatusChange = (taskId) => {
     const updatedTasks = tasks.map((task) =>
       task._id === taskId
@@ -161,14 +143,8 @@ const TaskList = () => {
         : task
     );
 
-    // Update local state
     setTasks(updatedTasks);
-    setFilteredTasks(updatedTasks);
-
-    // Persist to localStorage for cross-component sharing
     localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-
-    // Dispatch storage event for other components
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: 'tasks',
@@ -177,46 +153,22 @@ const TaskList = () => {
     );
   };
 
-  /**
-   * Initialize task editing mode
-   *
-   * @param {Object} task - Task object to edit
-   */
   const startEditing = (task) => {
     setEditingTask(task._id);
-    setEditForm({
-      title: task.title,
-      description: task.description,
-    });
+    setEditForm({ title: task.title, description: task.description });
   };
 
-  /**
-   * Handle form input changes
-   *
-   * @param {Event} e - Input change event
-   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Save edited task
-   * Updates both component state and localStorage
-   *
-   * @param {string} taskId - ID of the task being edited
-   */
   const saveTask = (taskId) => {
-    // Form validation
     if (!editForm.title.trim()) {
       alert('Task title cannot be empty');
       return;
     }
 
-    // Update task with edited values
     const updatedTasks = tasks.map((task) =>
       task._id === taskId
         ? {
@@ -228,15 +180,9 @@ const TaskList = () => {
         : task
     );
 
-    // Update local state
     setTasks(updatedTasks);
-    setFilteredTasks(updatedTasks);
     setEditingTask(null);
-
-    // Persist to localStorage for cross-component sharing
     localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-
-    // Dispatch storage event for other components
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: 'tasks',
@@ -245,19 +191,10 @@ const TaskList = () => {
     );
   };
 
-  /**
-   * Cancel task editing
-   */
   const cancelEditing = () => {
     setEditingTask(null);
   };
 
-  /**
-   * Format date for display
-   *
-   * @param {string} dateString - ISO date string
-   * @returns {string} Formatted date string
-   */
   const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString(undefined, {
@@ -271,12 +208,6 @@ const TaskList = () => {
     }
   };
 
-  /**
-   * Get appropriate CSS classes for priority badge
-   *
-   * @param {string} priority - Task priority level
-   * @returns {string} CSS class names
-   */
   const getPriorityClasses = (priority) => {
     switch (priority?.toLowerCase()) {
       case 'high':
@@ -290,48 +221,20 @@ const TaskList = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
-      <div
-        className='p-4 flex justify-center items-center'
-        aria-live='polite'
-        role='status'>
-        <FaSpinner
-          className='animate-spin text-blue-500 text-2xl'
-          aria-hidden='true'
-        />
+      <div className='p-4 flex justify-center items-center'>
+        <FaSpinner className='animate-spin text-blue-500 text-2xl' />
         <span className='ml-2'>Loading tasks...</span>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div
-        className='p-4 text-red-500 flex items-center'
-        aria-live='assertive'
-        role='alert'>
-        <FaExclamationTriangle className='mr-2' aria-hidden='true' />
+      <div className='p-4 text-red-500 flex items-center'>
+        <FaExclamationTriangle className='mr-2' />
         <span>{error}</span>
-      </div>
-    );
-  }
-
-  // Empty state
-  if (tasks.length === 0) {
-    return (
-      <div className='p-4 text-center text-gray-500' aria-live='polite'>
-        <p>No tasks found. Create a new task to get started.</p>
-        <button
-          className='mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
-          onClick={() => {
-            // In a real app, this would open a task creation modal or redirect
-            console.log('Create task clicked');
-          }}>
-          Create Task
-        </button>
       </div>
     );
   }
@@ -342,14 +245,19 @@ const TaskList = () => {
         Your Tasks
       </h3>
 
-      <div className='mb-4 flex items-center justify-between'>
-        <h3 className='text-lg font-semibold text-gray-800'>Your Tasks</h3>
+      <div className='mb-4 flex flex-col sm:flex-row items-center justify-between gap-2'>
+        <input
+          type='text'
+          placeholder='Search tasks...'
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className='border px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 w-full sm:w-1/2'
+        />
 
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value.toLowerCase())}
-          className='border px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300'
-          aria-label='Filter tasks by status'>
+          className='border px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300'>
           <option value='all'>All</option>
           <option value='complete'>Complete</option>
           <option value='incomplete'>Incomplete</option>
