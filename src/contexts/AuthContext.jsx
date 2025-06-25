@@ -1,20 +1,20 @@
 /**
  * Authentication Context
- * 
+ *
  * Provides authentication state and methods throughout the application.
  * Implements JWT-based authentication with secure storage and proper state management.
- * 
+ *
  * Features:
  * - User authentication state management
  * - Login/logout functionality
  * - Token persistence
  * - Role-based access control support
- * 
+ *
  * @author Senior Full-Stack Engineer
  * @version 1.0.0
  */
 
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 // Create the authentication context
 const AuthContext = createContext();
@@ -30,22 +30,22 @@ export const useAuth = () => {
 /**
  * Authentication Provider Component
  * Manages authentication state and provides methods to login, logout, etc.
- * 
+ *
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Child components
  */
-const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children } = {}) => {
   /**
    * Initialize user state from localStorage if available
    * This ensures authentication persists across page refreshes
    */
   const [user, setUser] = useState(() => {
-    const token = localStorage.getItem("token");
-    const email = localStorage.getItem("email");
-    
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('email');
+
     return token && email ? { email } : null;
   });
-  
+
   const [loading, setLoading] = useState(true);
 
   /**
@@ -55,13 +55,13 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem("token");
-        
+        const token = localStorage.getItem('token');
+
         if (token) {
           // In a real app, we would validate the token with the server
           // For this demo, we'll just check if it exists
-          const email = localStorage.getItem("email");
-          
+          const email = localStorage.getItem('email');
+
           if (email) {
             setUser({ email });
           } else {
@@ -71,13 +71,13 @@ const AuthProvider = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error("Authentication check failed:", error);
+        console.error('Authentication check failed:', error);
         handleLogout();
       } finally {
         setLoading(false);
       }
     };
-    
+
     checkAuth();
   }, []);
 
@@ -113,16 +113,16 @@ const AuthProvider = ({ children }) => {
    */
   const handleLogout = () => {
     // Clear all auth-related data from localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("email");
-    
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+
     // Reset user state
     setUser(null);
-    
+
     // In a real app, we might also invalidate the token on the server
-    console.log("User logged out");
+    console.log('User logged out');
   };
 
   /**
@@ -132,7 +132,7 @@ const AuthProvider = ({ children }) => {
    */
   const resetPassword = async (email) => {
     // In a real app, this would make an API call
-    console.log("Password reset requested for:", email);
+    console.log('Password reset requested for:', email);
     return Promise.resolve();
   };
 
@@ -142,7 +142,7 @@ const AuthProvider = ({ children }) => {
    * @returns {boolean} Whether user has the required role
    */
   const hasRole = (requiredRole) => {
-    const userRole = localStorage.getItem("userRole");
+    const userRole = localStorage.getItem('userRole');
     return userRole === requiredRole;
   };
 
@@ -157,8 +157,9 @@ const AuthProvider = ({ children }) => {
     logout: handleLogout,
     resetPassword,
     hasRole,
-    isAdmin: () => hasRole("admin"),
-    isAuthenticated: !!user,
+    isAdmin: () => hasRole('admin'),
+    isAuthenticated:
+      user !== null && user !== undefined && user.email !== undefined,
   };
 
   return (
