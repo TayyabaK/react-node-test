@@ -81,7 +81,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
       // Redirect to appropriate dashboard based on user's role
       const userRole = localStorage.getItem('userRole');
       const redirectPath =
-        userRole === 'admin' ? '/admin/dashboard' : '/user/dashboard';
+        userRole === 'admin' ? '/admin/dashboard' : '/admin/dashboard';
 
       return <Navigate to={redirectPath} replace />;
     }
@@ -108,6 +108,7 @@ function App() {
               <Routes>
                 {/* Public Routes */}
                 <Route path='/' element={<Login />} />
+                <Route path='/home' element={<Landing />} />
                 <Route path='/login' element={<Login />} />
                 <Route path='/signup' element={<Signup />} />
                 <Route path='/forgot-password' element={<ForgotPassword />} />
