@@ -137,11 +137,7 @@ const UserDashboard = () => {
       <UserSidebar />
 
       <div className='flex-1 p-6'>
-        <ToastContainer
-          position='taop-right'
-          autoClose={5000}
-          hideProgressBar
-        />
+        <ToastContainer position='top-right' autoClose={5000} hideProgressBar />
 
         {!isAuthenticated && (
           <>
@@ -160,7 +156,7 @@ const UserDashboard = () => {
                       key={columnKey}
                       title={columnKey}
                       id={columnKey}
-                      className='w-[280px]'>
+                      className='w-full'>
                       <SortableContext
                         items={tasks[columnKey].map((task) => task.id)}
                         strategy={verticalListSortingStrategy}>
@@ -180,6 +176,7 @@ const UserDashboard = () => {
 
             {/* Task Analytics & Notes Section */}
             <div className='mt-10 flex flex-col lg:flex-row items-start gap-6'>
+              {/* Task Analytics Chart */}
               <div className='p-6 w-full lg:w-1/2 bg-white shadow-lg rounded-xl border border-gray-300'>
                 <h2 className='text-3xl font-extrabold text-gray-900 mb-4 text-center tracking-wide uppercase'>
                   📊 Task Analytics
@@ -187,12 +184,13 @@ const UserDashboard = () => {
                 <Bar data={chartData} />
               </div>
 
-              <div className='p-6 w-full lg:w-[590px] bg-green-900 text-white rounded-xl border-[12px] border-[#8B4501] shadow-lg flex flex-col'>
+              {/* Notes */}
+              <div className='p-6 w-full lg:flex-1 bg-green-900 text-white rounded-xl border-[12px] border-[#8B4501] shadow-lg flex flex-col'>
                 <h2 className='text-2xl font-bold text-yellow-400 mb-2 text-center'>
                   📌 Notes
                 </h2>
                 <textarea
-                  className='flex-1 bg-transparent border-none outline-none text-white text-lg p-7'
+                  className='flex-1 bg-transparent border-none outline-none text-white text-lg p-7 w-full'
                   placeholder='Write your notes here...'
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
